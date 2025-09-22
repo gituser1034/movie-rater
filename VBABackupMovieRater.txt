@@ -1,0 +1,144 @@
+' Olly Love
+' Macro to clean up critic ratings from Rotten Tomatoes
+' To run, select column you want to clean, then click macro button
+
+Sub RTRatingCleaner()
+
+Dim ratingSheet As Worksheet
+Set ratingSheet = ThisWorkbook.Worksheets("RT Critic Movie Ratings")
+' Setting column clicked on as active
+Dim selectedCol As Range
+Set selectedCol = ActiveCell.EntireColumn
+Dim lastRow As Long
+lastRow = ratingSheet.Cells(ratingSheet.Rows.count, selectedCol.Column).End(xlUp).Row
+Dim i As Integer
+Dim j As Integer
+i = 13
+j = 13
+Dim txt As String
+Dim count As Integer
+count = 0
+Dim firstSplit() As String
+Dim secondSplit() As String
+Dim rating As String
+Dim blankCheck As Boolean
+blankFound = False
+Dim percentSplit() As String
+' For cases like C-Plus or C-Minus
+Dim wordPlusSplit() As String
+Dim cellValue As String
+
+' Check for blanks (no blanks means cleaned and don't need to run again)
+' Data would erase if ran again
+For i = 13 To lastRow
+    If ratingSheet.Cells(i, selectedCol.Column).Value = "" Then
+        blankFound = True
+        Debug.Print
+    End If
+Next i
+
+If blankFound = False Then
+    Exit Sub
+End If
+
+' Need 2 trackers as condensing data to remove blanks and garbage, and place values together
+' Tracker for iterating over everything (i) and tracker for data placement (j)
+' Iterate, when data is a rating, clean it and place it at j tracker, otherwise
+' clear the garbage cell contents
+For i = 13 To lastRow
+    txt = "Original Score"
+    cellValue = ratingSheet.Cells(i, selectedCol.Column).Value
+    ' looking for lines that hold ratings, and don't include edge case garbage rating
+    If InStr(1, cellValue, txt) > 0 And InStr(1, cellValue, "Big Screen Watch") = 0 Then
+        ' Cleans to get just rating ie 4/5, A+, etc
+        firstSplit = Split(cellValue, "|")
+        secondSplit = Split(firstSplit(1), ":")
+        ' So everything same case, keep uppercase for letter ratings like A, B, etc
+        rating = UCase(Trim(secondSplit(1)))
+        
+        ' edge cases where film is rated with a non conventional letter or number
+        If rating = "ONE STAR" Or rating = "1 STAR" Then
+            rating = "1/5"
+        ElseIf rating = "1.5 STARS" Or rating = "1 1/2 STARS" Then
+            rating = "2/5"
+        ElseIf rating = "TWO STARS" Or rating = "2 STARS" Then
+            rating = "2/5"
+        ElseIf rating = "2.5 STARS" Or rating = "2 1/2 STARS" Then
+            rating = "3/5"
+        ElseIf rating = "THREE STARS" Or rating = "3 STARS" Then
+            rating = "3/5"
+        ElseIf rating = "3.5 STARS" Or rating = "3 1/2 STARS" Then
+            rating = "4/5"
+        ElseIf rating = "FOUR STARS" Or rating = "4 STARS" Then
+            rating = "4/5"
+        ElseIf rating = "4.5 STARS" Or rating = "4 1/2 STARS" Then
+            rating = "5/5"
+        ElseIf rating = "FIVE STARS" Or rating = "5 STARS" Then
+            rating = "5/5"
+        ElseIf rating = "G.O.A.T" Then
+            rating = "5/5"
+        ' If rating contains percentage change it to that value out of 100
+        ' ie 82% = 82/100
+        ElseIf InStr(1, rating, "%") > 0 Then
+            percentSplit = Split(rating, "%")
+            rating = percentSplit(0) + "/100"
+        ' Cases where rating like ie C-plus, C plus, or C-minus
+        ElseIf InStr(1, rating, "PLUS") > 0 Then
+            rating = Replace(rating, " ", "-")
+            wordPlusSplit = Split(rating, "-")
+            rating = wordPlusSplit(0) + "+"
+        ElseIf InStr(1, rating, "MINUS") > 0 Then
+            rating = Replace(rating, " ", "-")
+            wordPlusSplit = Split(rating, "-")
+            rating = wordPlusSplit(0) + "-"
+        ' Edge case of ie 3.5 out of 5
+        ElseIf InStr(1, rating, "OUT OF") > 0 Then
+            rating = Replace(rating, "OUT OF", "/")
+        End If
+        
+        ' Clean again for edge cases like 3 / 5
+        rating = Replace(rating, " ", "")
+        
+        ' Change to pipe format so csv can store correctly, not changing fractions to dates
+        rating = Replace(rating, "/", "|")
+        
+        ' if i does not equal j, then clear
+        If i <> j Then
+            ratingSheet.Cells(i, selectedCol.Column).Clear
+        End If
+        
+        ' For edge case where reviewer just put ie 7, or 3, not specifying what scale
+        ' When not this edge case (correct rating format is string), we paste correct data
+        If IsNumeric(rating) = 0 Then
+            ratingSheet.Cells(j, selectedCol.Column).NumberFormat = "@"
+            ratingSheet.Cells(j, selectedCol.Column).Value = rating
+            j = j + 1
+        End If
+        
+    Else
+        ratingSheet.Cells(i, selectedCol.Column).Clear
+    End If
+Next i
+
+End Sub
+' Replace / with | for already cleaned data
+Sub PipeCleaner()
+
+Dim ratingSheet As Worksheet
+Set ratingSheet = ThisWorkbook.Worksheets("RT Critic Movie Ratings")
+' Setting column clicked on as active
+Dim selectedCol As Range
+Set selectedCol = ActiveCell.EntireColumn
+Dim lastRow As Long
+lastRow = ratingSheet.Cells(ratingSheet.Rows.count, selectedCol.Column).End(xlUp).Row
+Dim i As Integer
+Dim j As Integer
+i = 13
+Dim cell As Range
+
+For i = 13 To lastRow
+    Set cell = ratingSheet.Cells(i, selectedCol.Column)
+    cell.Value = Replace(cell.Value, "/", "|")
+Next i
+
+End Sub
