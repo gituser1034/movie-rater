@@ -1,5 +1,9 @@
 #  Rotten Tomatoes Movie Rating Data Analysis
+Author: Olly Love
+
 Film critics each use their own rating system to decide whether a movie is worth watching. Many online platforms aggregate critic data in different ways in an attempt to give a general concensus on whether a movie is enjoyable or not. I attempt to do the same by normalizing data to a 5 point scale and using the mode as the rating of a movie.
+
+Tools Used: Excel VBA, Python
 
 # How it Works:
 - Data is manually obtained through Rotten Tomatoes. All of the critic reviews for a chosen movie are copied and pasted into a column of an Excel sheet. 
