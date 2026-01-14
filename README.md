@@ -3,8 +3,11 @@ Film critics each use their own rating system to decide whether a movie is worth
 
 # How it Works:
 Data is manually obtained through Rotten Tomatoes. All of the critic reviews for a chosen movie are copied and pasted into a column of an Excel sheet. 
+
 An Excel VBA script cleans a selected column of data, so that just the ratings remain in that column.
+
 The cleaned data is manually copied and pasted into a csv file. 
+
 This csv file is read and processed by a Python script.
 The Python script normalizes data on a 5 point scale, uses the mode to determine a movies rating, and outputs the data to a csv file.
 This csv file displays the movies rating along with many other stats.
